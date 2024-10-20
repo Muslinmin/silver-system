@@ -220,4 +220,139 @@ mass_damper = 1 / (m * s^2 + c * s + k);
 
 controlSystemDesigner(mass_damper);
 
+%% Task 5-1
 
+% Given parameters
+m = 220;  % mass (kg)
+k = 13;   % spring constant (N/m)
+b = 20;   % damping constant (N·s/m)
+
+% State-space matrices
+A = [0 1; -k/m -b/m];
+B = [0; 1/m];
+C = [1 0];
+D = [0];
+
+% Desired performance specifications
+zeta = 0.7;  % Damping ratio for overshoot < 5%
+Ts = 2;      % Settling time (s)
+wn = 4 / (zeta * Ts);  % Natural frequency
+
+% Desired poles
+desired_poles = [-zeta*wn + wn*sqrt(1-zeta^2)*1i, -zeta*wn - wn*sqrt(1-zeta^2)*1i];
+
+% Calculate feedback gain using pole placement
+K = place(A, B, desired_poles);
+
+% Closed-loop system matrices
+A_cl = A - B * K;
+
+% Create the closed-loop system
+sys_cl = ss(A_cl, B, C, D);
+
+% Simulate the step response
+figure;
+step(sys_cl);
+title('Closed-Loop Step Response');
+grid on;
+
+% Validate step response characteristics
+info = stepinfo(sys_cl);
+disp(info);
+%% Task 5-1 A
+% Given parameters
+m = 220;  % mass (kg)
+k = 13;   % spring constant (N/m)
+b = 20;   % damping constant (N·s/m)
+
+% State-space matrices
+A = [0 1; -k/m -b/m];
+B = [0; 1/m];
+C = [1 0];
+D = [0];
+
+sys = ss(A, B, C, D);
+E = eig(A);
+disp(E); % check open loop eigenvalues
+
+P = [-2 + 2.04i, -2 - 2.04i]; 
+K = place(A, B, P);
+disp(K); % check for the k values
+
+Acl = A - B*K;
+Ecl = eig(Acl);
+
+sysCl = ss(Acl, B, C, D);
+
+step(sysCl);
+
+Kdc = dcgain(sysCl);
+
+Kr = 1/Kdc;
+disp(Kr);
+
+sysCl_scaled = ss(Acl, B*Kr, C, D);
+step(sysCl_scaled);
+
+%% Task 5-1 B
+
+%% Task 5-1 A: Adjust Poles Based on Overshoot and Settling Time
+% Given parameters
+m = 220;  % mass (kg)
+k = 13;   % spring constant (N/m)
+b = 20;   % damping constant (N·s/m)
+
+% State-space matrices
+A = [0 1; -k/m -b/m];
+B = [0; 1/m];
+C = [1 0];
+D = [0];
+
+% User-defined performance specifications
+desired_overshoot = 0.04;  % Overshoot less than 5%
+desired_settling_time = 1.8;  % Settling time less than 2 seconds
+
+% Step 1: Calculate the damping ratio zeta from overshoot formula
+zeta = -log(desired_overshoot) / sqrt(pi^2 + (log(desired_overshoot))^2);
+
+% Step 2: Calculate the natural frequency wn from settling time
+wn = 4 / (zeta * desired_settling_time);
+
+% Step 3: Calculate the desired pole locations
+real_part = -zeta * wn;
+imag_part = wn * sqrt(1 - zeta^2);
+
+% Desired poles
+P = [real_part + 1i*imag_part, real_part - 1i*imag_part];
+
+% Display the calculated poles
+disp('Calculated pole locations based on overshoot and settling time:');
+disp(P);
+
+% Step 4: Place the poles
+K = place(A, B, P);
+disp('Calculated state feedback gain K:');
+disp(K);  % Check the K values
+
+% Closed-loop system
+Acl = A - B*K;
+Ecl = eig(Acl);
+
+% Step 5: Simulate the closed-loop system
+sysCl = ss(Acl, B, C, D);
+figure;
+step(sysCl);
+title('Closed-Loop Step Response');
+grid on;
+
+% Step 6: Scaling for steady-state error reduction (as per original code)
+Kdc = dcgain(sysCl);
+Kr = 1/Kdc;
+disp('Scaling factor for steady-state error (Kr):');
+disp(Kr);
+
+sysCl_scaled = ss(Acl, B*Kr, C, D);
+figure;
+step(sysCl_scaled);
+title('Scaled Closed-Loop Step Response');
+grid on;
