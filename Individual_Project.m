@@ -177,38 +177,9 @@ writetable(results_table, 'pid_tuning_kd_results.csv');
 % Display message once complete
 disp('PID tuning results (Kd) have been saved to pid_tuning_kd_results.csv');
 
+
+
 %% Task 4-1
-
-m = 220; % Mass
-c = 20;  % Damping coefficient
-k = 13;  % Spring constant
-
-s = tf('s');
-mass_damper = 1 / (m * s^2 + c * s + k);
-
-
-
-
-
-rlocus(mass_damper)
-
-zeta = 1.17;
-wn = 1.8;
-sgrid(zeta, wn);
-
-
-
-axis([-30 1 -5 5])
-
-[K, poles] = rlocfind(mass_damper);
-
-sys_cl = feedback(K*mass_damper,1);
-disp(K);
-step(sys_cl);
-
-
-
-%% Task 4-1 A
 
 m = 220; % Mass
 c = 20;  % Damping coefficient
@@ -220,83 +191,8 @@ mass_damper = 1 / (m * s^2 + c * s + k);
 
 controlSystemDesigner(mass_damper);
 
-%% Task 5-1
 
-% Given parameters
-m = 220;  % mass (kg)
-k = 13;   % spring constant (N/m)
-b = 20;   % damping constant (N·s/m)
-
-% State-space matrices
-A = [0 1; -k/m -b/m];
-B = [0; 1/m];
-C = [1 0];
-D = [0];
-
-% Desired performance specifications
-zeta = 0.7;  % Damping ratio for overshoot < 5%
-Ts = 2;      % Settling time (s)
-wn = 4 / (zeta * Ts);  % Natural frequency
-
-% Desired poles
-desired_poles = [-zeta*wn + wn*sqrt(1-zeta^2)*1i, -zeta*wn - wn*sqrt(1-zeta^2)*1i];
-
-% Calculate feedback gain using pole placement
-K = place(A, B, desired_poles);
-
-% Closed-loop system matrices
-A_cl = A - B * K;
-
-% Create the closed-loop system
-sys_cl = ss(A_cl, B, C, D);
-
-% Simulate the step response
-figure;
-step(sys_cl);
-title('Closed-Loop Step Response');
-grid on;
-
-% Validate step response characteristics
-info = stepinfo(sys_cl);
-disp(info);
-%% Task 5-1 A
-% Given parameters
-m = 220;  % mass (kg)
-k = 13;   % spring constant (N/m)
-b = 20;   % damping constant (N·s/m)
-
-% State-space matrices
-A = [0 1; -k/m -b/m];
-B = [0; 1/m];
-C = [1 0];
-D = [0];
-
-sys = ss(A, B, C, D);
-E = eig(A);
-disp(E); % check open loop eigenvalues
-
-P = [-2 + 2.04i, -2 - 2.04i]; 
-K = place(A, B, P);
-disp(K); % check for the k values
-
-Acl = A - B*K;
-Ecl = eig(Acl);
-
-sysCl = ss(Acl, B, C, D);
-
-step(sysCl);
-
-Kdc = dcgain(sysCl);
-
-Kr = 1/Kdc;
-disp(Kr);
-
-sysCl_scaled = ss(Acl, B*Kr, C, D);
-step(sysCl_scaled);
-
-%% Task 5-1 B
-
-%% Task 5-1 A: Adjust Poles Based on Overshoot and Settling Time
+%% Task 5-1: Adjust Poles Based on Overshoot and Settling Time
 % Given parameters
 m = 220;  % mass (kg)
 k = 13;   % spring constant (N/m)
@@ -336,7 +232,6 @@ disp(K);  % Check the K values
 
 % Closed-loop system
 Acl = A - B*K;
-Ecl = eig(Acl);
 
 % Step 5: Simulate the closed-loop system
 sysCl = ss(Acl, B, C, D);
@@ -345,7 +240,7 @@ step(sysCl);
 title('Closed-Loop Step Response');
 grid on;
 
-% Step 6: Scaling for steady-state error reduction (as per original code)
+%Step 6: Scaling for steady-state error reduction (as per original code)
 Kdc = dcgain(sysCl);
 Kr = 1/Kdc;
 disp('Scaling factor for steady-state error (Kr):');
